@@ -6,10 +6,10 @@ from .models import eText
 
 class eTextIndex(SearchIndex):
     text = CharField(document=True, use_template=True)
-    publisher = CharField(model_attr='publisher')
-    creator = CharField(model_attr='creator', null=True)
+    publisher = CharField(model_attr='publisher', faceted=True)
+    creator = CharField(model_attr='creator', null=True, faceted=True)
     title = CharField(model_attr='title')
-    created = DateField(model_attr='created', null=True)
+    created = DateField(model_attr='created', null=True, faceted=True)
 
 
 site.register(eText, eTextIndex)

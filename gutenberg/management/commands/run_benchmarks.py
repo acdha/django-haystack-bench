@@ -11,6 +11,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
 from django.test.client import Client
 
+from haystack.query import SearchQuerySet
+
 from performance_tools.memory import Heap
 from performance_tools.query_counts import QueryCounter
 
@@ -27,7 +29,7 @@ class Command(BaseCommand):
 
         self.client = Client()
 
-        for bench_f in ("rebuild_index", "trivial_search"):
+        for bench_f in ("rebuild_index", "trivial_search", "basic_faceting"):
             res = self.bench(getattr(self, bench_f))
 
             for k, v in res.items():
@@ -61,5 +63,8 @@ class Command(BaseCommand):
         if resp.status_code != 200:
             raise RuntimeError(u"Query failed: %s" % resp)
 
-    # TODO: Lower-level API benchmarks
-    
+    def basic_faceting(self):
+        # NOTE: Currently does nothing on Whoosh due to lack of backend support
+        sqs = SearchQuerySet().filter(content="america")
+        sqs = sqs.facet("publisher")
+        fc = sqs.facet_counts()
