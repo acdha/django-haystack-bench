@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
     def trivial_search(self):
         """Simple whole-path benchmark"""
-        
+
         resp = self.client.get("/?q=america")
         if resp.status_code != 200:
             raise RuntimeError(u"Query failed: %s" % resp)

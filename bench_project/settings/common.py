@@ -1,6 +1,6 @@
 import os
 
-PROJECT_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
+PROJECT_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 DATABASES = {"default": {"ENGINE": 'sqlite3',
                             "NAME": os.path.join(PROJECT_ROOT,
@@ -11,7 +11,7 @@ INSTALLED_APPS = ('django.contrib.contenttypes', 'django.contrib.sites',
 
 ROOT_URLCONF = 'bench_project.urls'
 
-TEMPLATE_DIRS = os.path.join(os.path.dirname(__file__), "templates")
+TEMPLATE_DIRS = os.path.join(PROJECT_ROOT, "bench_project", "templates")
 
 TEMPLATE_LOADERS = (
     ('django.template.loaders.cached.Loader', (
@@ -21,14 +21,4 @@ TEMPLATE_LOADERS = (
 )
 
 HAYSTACK_SITECONF = 'bench_project.search_sites'
-HAYSTACK_SEARCH_ENGINE = 'whoosh'
-
 HAYSTACK_INCLUDE_SPELLING = True
-
-# HAYSTACK_SEARCH_ENGINE = 'solr'
-# HAYSTACK_SOLR_URL = 'http://localhost:9001/solr/example'
-# HAYSTACK_SOLR_TIMEOUT = 60 * 5
-
-# For Whoosh:
-HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = os.path.join(PROJECT_ROOT, 'whoosh_index')

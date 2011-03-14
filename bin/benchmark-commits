@@ -5,7 +5,7 @@ set -e
 REV_HISTORY_FILE="$HOME/.haystack-bench-last-commit"
 
 ENVIRONMENT=${DJANGOBENCH_ENVIRONMENT:-MacBook Air}
-PYTHON_VER="`python -V 2>&1`"
+
 
 if [ -z "$HAYSTACK_ROOT" ]; then
     echo "You must define HAYSTACK_ROOT" 1>&2
@@ -36,12 +36,14 @@ for commit in `git log --reverse $PREVIOUS_REV..$LATEST_REV --format=%H`; do
     git checkout --quiet --force $commit
     git clean -f -d
 
-    RESULT_DIR="$HOME/haystack-bench-results/$commit"
-    mkdir -p "$RESULT_DIR"
+    for backend in whoosh solr; do
+        RESULT_DIR="$HOME/haystack-bench-results/$commit/$backend"
+        mkdir -p "$RESULT_DIR"
 
-    echo -n "Benchmarking ${commit}…"
-    django-admin.py run_benchmarks -v0 $RESULT_DIR
-    echo " Done"
+        echo -n "Benchmarking ${commit} using ${backend}…"
+        django-admin.py run_benchmarks --settings=bench_project.settings.$backend -v0 $RESULT_DIR
+        echo " Done"
 
-    save-results --url=${SPEEDCENTER_ADD_URL:-"http://127.0.0.1:8000/result/add/"} --project=django-haystack --environment="$ENVIRONMENT" --commit-id=$commit --executable="$PYTHON_VER" "$RESULT_DIR"
+        save-results --url=${SPEEDCENTER_ADD_URL:-"http://127.0.0.1:8000/result/add/"} --project=django-haystack --environment="$ENVIRONMENT" --commit-id=$commit --executable=$backend "$RESULT_DIR"
+    done
 done
