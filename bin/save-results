@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+import json
+import os
+import logging
+import sys
+
+from speedcenter.client import save_to_speedcenter
+
+
+def save_result(data, options):
+    params = {"url":options.url, "project":options.project,
+                        "environment": options.environment,
+                        "executable": options.executable,
+                        "commitid": options.commit_id}
+
+    for k, v in data.items():
+        params[str(k)] = v
+
+    save_to_speedcenter(**params)
+
+
+def main():
+    logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s",
+                        level=logging.INFO)
+
+    parser = OptionParser()
+    parser.add_option("--commit-id", help="Commit ID of the experimental version")
+    parser.add_option("--environment", help="Use a custom Codespeed environment")
+    parser.add_option("--executable")
+    parser.add_option("--project", default="django-haystack")
+    parser.add_option("--url", help="URL of your Codespeed server (e.g. http://codespeed.example.org)")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) != 1:
+        parser.error("You must provide the path to JSON result files")
+
+    required = ('url', 'environment', 'project', 'commit_id', 'executable')
+
+    if not all(getattr(options, i) for i in required):
+        parser.error("The following parameters must be provided:\n\t%s" % "\n\t".join(
+            "--%s".replace("_", "-") % i for i in required))
+
+    result_dir = args[0]
+    if not os.path.exists(result_dir):
+        parser.error("%s does not exist" % result_dir)
+
+    for f in os.listdir(result_dir):
+        if not f.endswith("json"):
+            continue
+
+        logging.info("Saving %s", f)
+
+        data = json.load(file(os.path.join(result_dir, f), "rb"))
+
+        try:
+            save_result(data, options)
+        except StandardError, e:
+            logging.warning("Error saving %s: %s", f, e, exc_info=True)
+            sys.exit(1)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,6 @@
+git+http://github.com/acdha/django-performance-tools.git#egg=django-performance-tools
+
+Django==1.2.5
+django-haystack==1.1.0
+guppy==0.1.9
+Whoosh==1.7.8

@@ -1,0 +1,5 @@
+{{ object.publisher }}
+{{ object.title }}
+{{ object.creator }}
+{{ object.language }}
+{{ object.created }}

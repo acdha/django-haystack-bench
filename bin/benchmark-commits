@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -e
+
+REV_HISTORY_FILE="$HOME/.haystack-bench-last-commit"
+
+ENVIRONMENT=${DJANGOBENCH_ENVIRONMENT:-MacBook Air}
+PYTHON_VER="`python -V 2>&1`"
+
+if [ -z "$HAYSTACK_ROOT" ]; then
+    echo "You must define HAYSTACK_ROOT" 1>&2
+    exit 1
+fi
+
+cd $HAYSTACK_ROOT
+
+git checkout --quiet --force master
+git clean -f -d
+git fetch --quiet --all --tags
+git pull --quiet
+
+LATEST_REV=`git rev-parse HEAD`
+
+if [ ! -f $REV_HISTORY_FILE ]; then
+    PREVIOUS_REV=HEAD~10
+else
+    PREVIOUS_REV=`cat $REV_HISTORY_FILE`
+fi
+
+echo $LATEST_REV > $REV_HISTORY_FILE
+
+for commit in `git log --reverse $PREVIOUS_REV..$LATEST_REV --format=%H`; do
+    # Ensure that we never try to run a given commit more than once:
+    echo $commit > $REV_HISTORY_FILE
+
+    git checkout --quiet --force $commit
+    git clean -f -d
+
+    RESULT_DIR="$HOME/haystack-bench-results/$commit"
+    mkdir -p "$RESULT_DIR"
+
+    echo -n "Benchmarking ${commit}…"
+    django-admin.py run_benchmarks -v0 $RESULT_DIR
+    echo " Done"
+
+    save-results --url=${SPEEDCENTER_ADD_URL:-"http://127.0.0.1:8000/result/add/"} --project=django-haystack --environment="$ENVIRONMENT" --commit-id=$commit --executable="$PYTHON_VER" "$RESULT_DIR"
+done
